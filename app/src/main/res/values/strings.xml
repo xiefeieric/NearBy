@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">英国生活</string>
+    <string name="title_activity_main">Map</string>
+    <string name="DrawerOpen">Drawer Open</string>
+    <string name="DrawerClose">Drawer Close</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_detail">DetailActivity</string>
+</resources>

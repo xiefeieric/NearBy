@@ -1,0 +1,16 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context=".activity.MainActivity">
+
+    <item
+        android:id="@+id/zoomDetail"
+        android:orderInCategory="100"
+        android:title="Zoom"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/shareDetail"
+        android:orderInCategory="100"
+        android:title="Share"
+        app:showAsAction="never"/>
+</menu>
