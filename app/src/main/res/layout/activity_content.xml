@@ -26,6 +26,7 @@
             android:layout_marginTop="65dp"
             android:layout_marginRight="10dp"/>
 
+
     </FrameLayout>
 
     <ListView
@@ -33,7 +34,9 @@
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:choiceMode="singleChoice"
         android:background="@android:color/white"
+        android:layout_marginTop="?attr/actionBarSize"
         ></ListView>
 
 </android.support.v4.widget.DrawerLayout>

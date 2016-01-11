@@ -1,11 +1,8 @@
 package uk.me.feixie.testnearby.activity;
 
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -13,23 +10,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
-import java.io.Serializable;
-
 import uk.me.feixie.testnearby.R;
-import uk.me.feixie.testnearby.model.Restaurants;
-import uk.me.feixie.testnearby.utils.UIUtils;
+import uk.me.feixie.testnearby.model.ServerData;
 
 public class DetailActivity extends AppCompatActivity {
 
-    private Restaurants.Restaurant mRestaurant;
+    private ServerData.DataItem.Restaurant mRestaurant;
     private WebView wvDetail;
     private ProgressBar progressBar;
     private int zoom = 1;
@@ -38,7 +29,7 @@ public class DetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
-        mRestaurant = (Restaurants.Restaurant) getIntent().getSerializableExtra("restaurant");
+        mRestaurant = (ServerData.DataItem.Restaurant) getIntent().getSerializableExtra("restaurant");
         initToolbar();
         initViews();
     }
@@ -95,7 +86,7 @@ public class DetailActivity extends AppCompatActivity {
         }
         if (id == R.id.zoomDetail) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setSingleChoiceItems(new CharSequence[]{"Small", "Normal", "Large"}, zoom, new DialogInterface.OnClickListener() {
+            builder.setSingleChoiceItems(new CharSequence[]{getString(R.string.small_size), getString(R.string.normal_size), getString(R.string.large_size)}, zoom, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     zoom = which;

@@ -15,8 +15,15 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -30,19 +37,17 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import org.xutils.common.Callback;
-import org.xutils.ex.HttpException;
 import org.xutils.http.RequestParams;
 import org.xutils.x;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import uk.me.feixie.testnearby.R;
-import uk.me.feixie.testnearby.fragment.DetailFragment;
-import uk.me.feixie.testnearby.model.Restaurants;
+import uk.me.feixie.testnearby.model.ServerData;
 import uk.me.feixie.testnearby.utils.Constant;
 import uk.me.feixie.testnearby.utils.UIUtils;
 
@@ -56,7 +61,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ActionBarDrawerToggle mToggle;
     private ListView leftMenu;
     private ImageView ivMyLocation;
-    private Restaurants mRestaurants;
+    private ServerData mServerData;
+    private ArrayList<ServerData.DataItem> mMenuList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void loadDataFromServer() {
+
         x.http().get(new RequestParams(Constant.SERVER_JSON), new Callback.CommonCallback<String>() {
             @Override
             public void onSuccess(String result) {
@@ -126,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onError(Throwable ex, boolean isOnCallback) {
-                Toast.makeText(x.app(), ex.getMessage(), Toast.LENGTH_LONG).show();
+                System.out.println(ex.getMessage());
             }
 
             @Override
@@ -146,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         ivMyLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mLastLocation!=null) {
+                if (mLastLocation != null) {
                     updateCurrentLocation();
                 }
             }
@@ -155,27 +162,49 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void showDataOnMap(String result) {
         Gson gson = new Gson();
-        mRestaurants = gson.fromJson(result, Restaurants.class);
+        mServerData = gson.fromJson(result, ServerData.class);
 //        System.out.println(restaurants.toString());
-        for (int i = 0; i < mRestaurants.restruant.size(); i++) {
-            Restaurants.Restaurant restaurant = mRestaurants.restruant.get(i);
+        showRestaurantOnMap();
+
+        mMenuList = mServerData.data;
+        MyListAdapter adapter = new MyListAdapter();
+        leftMenu.setAdapter(adapter);
+        leftMenu.setItemChecked(0, true);
+        leftMenu.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                dlMain.closeDrawers();
+            }
+        });
+    }
+
+    private void showRestaurantOnMap() {
+
+        for (int i = 0; i < mServerData.data.get(0).restruant.size(); i++) {
+            ServerData.DataItem.Restaurant restaurant = mServerData.data.get(0).restruant.get(i);
             String postcode = restaurant.postcode;
-            Geocoder geocoder = new Geocoder(this);
+            Geocoder geocoder = new Geocoder(MainActivity.this);
             try {
                 List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
                 double latitude = addresses.get(0).getLatitude();
                 double longitude = addresses.get(0).getLongitude();
-                LatLng dataAddress = new LatLng(latitude,longitude);
-                MarkerOptions options = new MarkerOptions();
+                LatLng dataAddress = new LatLng(latitude, longitude);
+                final MarkerOptions options = new MarkerOptions();
                 options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                mMap.addMarker(options);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mMap.addMarker(options);
+                    }
+                });
 
 //                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(dataAddress,15));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+
     }
 
     @Override
@@ -213,11 +242,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onInfoWindowClick(Marker marker) {
 //                UIUtils.showToast(MainActivity.this, marker.getTitle());
-                Intent intent = new Intent(MainActivity.this,DetailActivity.class);
+                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
 //                System.out.println(marker.getId().substring(1));
                 int id = Integer.parseInt(marker.getId().substring(1));
-                Restaurants.Restaurant restaurant = mRestaurants.restruant.get(id);
-                intent.putExtra("restaurant",restaurant);
+                ServerData.DataItem.Restaurant restaurant = mServerData.data.get(0).restruant.get(id);
+                intent.putExtra("restaurant", restaurant);
                 startActivity(intent);
             }
         });
@@ -228,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //            mMap.addMarker(new MarkerOptions().position(current).title("Current Location"));
 //            mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
 //        } else {
-            // Add a marker in Sydney and move the camera
+        // Add a marker in Sydney and move the camera
 //            LatLng sydney = new LatLng(-34, 151);
 //            mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
 //            mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
@@ -244,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        double latitude = mLastLocation.getLatitude();
 //        System.out.println(longitude+"; "+latitude);
 
-        if (mLastLocation!=null) {
+        if (mLastLocation != null) {
             updateCurrentLocation();
         }
     }
@@ -271,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         int itemId = item.getItemId();
         switch (itemId) {
             case R.id.settings:
-                UIUtils.showToast(this,"Settings");
+                UIUtils.showToast(this, "Settings");
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -280,6 +309,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void updateCurrentLocation() {
         LatLng current = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
 //            mMap.addMarker(new MarkerOptions().position(current).title("Current Location"));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current,Constant.MAP_ZOOM));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, Constant.MAP_ZOOM));
+    }
+
+
+    class MyListAdapter extends BaseAdapter {
+
+        @Override
+        public int getCount() {
+            return mMenuList.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mMenuList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = View.inflate(MainActivity.this, R.layout.item_list_main, null);
+            }
+
+            TextView tvMenu = (TextView) convertView.findViewById(R.id.tvMenu);
+            tvMenu.setText(mMenuList.get(position).title);
+
+            return convertView;
+        }
     }
 }
