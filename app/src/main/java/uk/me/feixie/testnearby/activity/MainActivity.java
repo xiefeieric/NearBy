@@ -7,6 +7,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.ArrayMap;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ServerData mServerData;
     private ArrayList<ServerData.DataItem> mMenuList;
     private ActionBar mSupportActionBar;
+    private int dataTypeId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         dlMain = (DrawerLayout) findViewById(R.id.dlMain);
         leftMenu = (ListView) findViewById(R.id.leftMenu);
         ivMyLocation = (ImageView) findViewById(R.id.ivMyLocation);
+        dataTypeId = 0;
 
         //init actionbar toggle button
         mToggle = new ActionBarDrawerToggle(this, dlMain, mToolbar, R.string.DrawerOpen, R.string.DrawerClose);
@@ -131,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onError(Throwable ex, boolean isOnCallback) {
-                System.out.println(ex.getMessage());
+                Toast.makeText(x.app(), ex.getMessage(), Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -156,27 +159,80 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
+
+        leftMenu.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                mMap.clear();
+                markerMap.clear();
+                if (position==0) {
+                    dataTypeId = 0;
+                    showRestaurantOnMap();
+                } else if (position==1) {
+                    dataTypeId=1;
+                    showAfternoonTeaOnMap();
+                }
+
+                dlMain.closeDrawers();
+            }
+        });
+    }
+
+
+    private synchronized void showAfternoonTeaOnMap() {
+
+        new Thread() {
+            @Override
+            public void run() {
+
+                for (int i = 0; i < mServerData.data.get(1).tea.size(); i++) {
+                    ServerData.DataItem.Tea afternoonTea = mServerData.data.get(1).tea.get(i);
+                    String postcode = afternoonTea.postcode;
+                    Geocoder geocoder = new Geocoder(MainActivity.this);
+                    try {
+                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                        if (addresses.size()>0){
+                            double latitude = addresses.get(0).getLatitude();
+                            double longitude = addresses.get(0).getLongitude();
+                            LatLng dataAddress = new LatLng(latitude, longitude);
+                            final MarkerOptions options = new MarkerOptions();
+                            options.position(dataAddress).title(afternoonTea.name).snippet(afternoonTea.address);
+
+                            resMarkerId = i;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Marker marker = mMap.addMarker(options);
+                                    markerMap.put(marker, resMarkerId);
+                                }
+                            });
+                        }
+
+//                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(dataAddress,15));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
     }
 
     private void showDataOnMap(String result) {
         Gson gson = new Gson();
         mServerData = gson.fromJson(result, ServerData.class);
-//        System.out.println(restaurants.toString());
+
         showRestaurantOnMap();
 
         mMenuList = mServerData.data;
         MyListAdapter adapter = new MyListAdapter();
         leftMenu.setAdapter(adapter);
         leftMenu.setItemChecked(0, true);
-        leftMenu.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                dlMain.closeDrawers();
-            }
-        });
+
     }
 
-    private void showRestaurantOnMap() {
+    private ArrayMap markerMap =  new ArrayMap();
+    private int resMarkerId;
+    private synchronized void showRestaurantOnMap() {
 
         new Thread() {
             @Override
@@ -195,10 +251,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             final MarkerOptions options = new MarkerOptions();
                             options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
+                            resMarkerId = i;
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    mMap.addMarker(options);
+                                    Marker marker = mMap.addMarker(options);
+                                    markerMap.put(marker, resMarkerId);
                                 }
                             });
                         }
@@ -248,12 +306,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-//                UIUtils.showToast(MainActivity.this, marker.getTitle());
+
+                int position = (int) markerMap.get(marker);
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-//                System.out.println(marker.getId().substring(1));
-                int id = Integer.parseInt(marker.getId().substring(1));
-                ServerData.DataItem.Restaurant restaurant = mServerData.data.get(0).restruant.get(id);
-                intent.putExtra("restaurant", restaurant);
+
+                if (dataTypeId==0) {
+                    ServerData.DataItem.Restaurant restaurant = mServerData.data.get(0).restruant.get(position);
+                    intent.putExtra("restaurant", restaurant);
+                } else if (dataTypeId==1) {
+                    ServerData.DataItem.Tea afternoonTea = mServerData.data.get(1).tea.get(position);
+                    intent.putExtra("afternoonTea", afternoonTea);
+                }
+
                 startActivity(intent);
             }
         });
@@ -287,12 +351,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        Toast.makeText(this,"Connection Suspended",Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
+        Toast.makeText(this,connectionResult.getErrorMessage(),Toast.LENGTH_LONG).show();
     }
 
     @Override

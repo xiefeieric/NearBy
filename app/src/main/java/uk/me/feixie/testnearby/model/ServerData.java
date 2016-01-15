@@ -21,6 +21,7 @@ public class ServerData implements Serializable {
         public String id;
         public String title;
         public ArrayList<Restaurant> restruant;
+        public ArrayList<Tea> tea;
 
         @Override
         public String toString() {
@@ -28,6 +29,7 @@ public class ServerData implements Serializable {
                     "id='" + id + '\'' +
                     ", title='" + title + '\'' +
                     ", restruant=" + restruant +
+                    ", tea=" + tea +
                     '}';
         }
 
@@ -45,6 +47,31 @@ public class ServerData implements Serializable {
             @Override
             public String toString() {
                 return "Restaurant{" +
+                        "id='" + id + '\'' +
+                        ", name='" + name + '\'' +
+                        ", category='" + category + '\'' +
+                        ", url='" + url + '\'' +
+                        ", address='" + address + '\'' +
+                        ", postcode='" + postcode + '\'' +
+                        ", tel='" + tel + '\'' +
+                        '}';
+            }
+        }
+
+        public class Tea implements Serializable {
+            //{"id":"1","name":"Chi Kitchen", "category":"Chinese", "url":"http://www.honglingjin.co.uk/168422.html",
+            // "address":"334-348 Oxford Street, London", "postcode":"W1C 1JG", "tel":"020 3841 6888"}
+            public String id;
+            public String name;
+            public String category;
+            public String url;
+            public String address;
+            public String postcode;
+            public String tel;
+
+            @Override
+            public String toString() {
+                return "Tea{" +
                         "id='" + id + '\'' +
                         ", name='" + name + '\'' +
                         ", category='" + category + '\'' +

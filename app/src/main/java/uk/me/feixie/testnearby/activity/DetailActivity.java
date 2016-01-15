@@ -15,6 +15,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
+import java.io.Serializable;
+
 import uk.me.feixie.testnearby.R;
 import uk.me.feixie.testnearby.model.ServerData;
 
@@ -24,12 +26,14 @@ public class DetailActivity extends AppCompatActivity {
     private WebView wvDetail;
     private ProgressBar progressBar;
     private int zoom = 1;
+    private ServerData.DataItem.Tea mAfternoonTea;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         mRestaurant = (ServerData.DataItem.Restaurant) getIntent().getSerializableExtra("restaurant");
+        mAfternoonTea = (ServerData.DataItem.Tea) getIntent().getSerializableExtra("afternoonTea");
         initToolbar();
         initViews();
     }
@@ -43,7 +47,11 @@ public class DetailActivity extends AppCompatActivity {
         if (mRestaurant!=null) {
             supportActionBar.setTitle(mRestaurant.name);
             supportActionBar.setSubtitle(mRestaurant.address);
-        } else {
+        } else if (mAfternoonTea!=null) {
+            supportActionBar.setTitle(mAfternoonTea.name);
+            supportActionBar.setSubtitle(mAfternoonTea.address);
+        }
+        else {
             supportActionBar.setTitle("");
         }
     }
@@ -68,7 +76,12 @@ public class DetailActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.INVISIBLE);
             }
         });
-        wvDetail.loadUrl(mRestaurant.url);
+        if (mRestaurant!=null) {
+            wvDetail.loadUrl(mRestaurant.url);
+        } else if (mAfternoonTea!=null) {
+            wvDetail.loadUrl(mAfternoonTea.url);
+        }
+
     }
 
     @Override
