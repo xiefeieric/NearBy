@@ -8,9 +8,9 @@
         android:orderInCategory="100"
         android:title="@string/zoom"
         app:showAsAction="never"/>
-    <item
-        android:id="@+id/shareDetail"
-        android:orderInCategory="100"
-        android:title="@string/share"
-        app:showAsAction="never"/>
+    <!--<item-->
+        <!--android:id="@+id/shareDetail"-->
+        <!--android:orderInCategory="100"-->
+        <!--android:title="@string/share"-->
+        <!--app:showAsAction="never"/>-->
 </menu>
