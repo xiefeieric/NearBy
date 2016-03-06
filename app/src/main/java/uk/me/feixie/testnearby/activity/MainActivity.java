@@ -47,7 +47,6 @@ import java.util.List;
 import uk.me.feixie.testnearby.R;
 import uk.me.feixie.testnearby.model.ServerData;
 import uk.me.feixie.testnearby.utils.Constant;
-import uk.me.feixie.testnearby.utils.UIUtils;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
@@ -93,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
+                    .addApiIfAvailable(LocationServices.API)
                     .build();
         }
 
@@ -128,15 +127,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void loadDataFromServer() {
 
-        x.http().get(new RequestParams(Constant.SERVER_JSON), new Callback.CommonCallback<String>() {
+        RequestParams url = new RequestParams(Constant.SERVER_JSON);
+        url.setCacheMaxAge(1000 * 60);
+        x.http().get(url, new Callback.CacheCallback<String>() {
+
+            boolean hasError = false;
+            String result = null;
+
+            @Override
+            public boolean onCache(String result) {
+                this.result = result;
+                return false;
+            }
+
             @Override
             public void onSuccess(String result) {
-//                System.out.println(result);
-                showDataOnMap(result);
+                this.result = result;
             }
 
             @Override
             public void onError(Throwable ex, boolean isOnCallback) {
+                hasError = true;
                 Toast.makeText(x.app(), ex.getMessage(), Toast.LENGTH_LONG).show();
             }
 
@@ -147,7 +158,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onFinished() {
-
+                if (!hasError && result!=null) {
+                    showDataOnMap(result);
+                }
             }
         });
     }
@@ -561,19 +574,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     int position = (int) markerMap.get(marker);
                     ServerData.DataItem.ResJapanKorean resJapanKorean = mServerData.data.get(1).resJapanKorean.get(position);
                     intent.putExtra("resJapanKorean", resJapanKorean);
-                }else if (dataTypeId == 2) {
+                } else if (dataTypeId == 2) {
                     int position = (int) markerMap.get(marker);
                     ServerData.DataItem.ResVenTai resVenTai = mServerData.data.get(2).resVenTai.get(position);
                     intent.putExtra("resVenTai", resVenTai);
-                }else if (dataTypeId == 3) {
+                } else if (dataTypeId == 3) {
                     int position = (int) markerMap.get(marker);
                     ServerData.DataItem.ResWestern resWestern = mServerData.data.get(3).resWestern.get(position);
                     intent.putExtra("resWestern", resWestern);
-                }else if (dataTypeId == 4) {
+                } else if (dataTypeId == 4) {
                     int position = (int) markerMap.get(marker);
                     ServerData.DataItem.ResIndiaTurkey resIndiaTurkey = mServerData.data.get(4).resIndiaTurkey.get(position);
                     intent.putExtra("resIndiaTurkey", resIndiaTurkey);
-                }else if (dataTypeId == 5) {
+                } else if (dataTypeId == 5) {
                     int position = (int) markerMap.get(marker);
                     ServerData.DataItem.Tea afternoonTea = mServerData.data.get(5).tea.get(position);
                     intent.putExtra("afternoonTea", afternoonTea);
@@ -627,9 +640,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
         switch (itemId) {
-            case R.id.settings:
-                UIUtils.showToast(this, "Settings");
+            case R.id.action_apps:
+                Intent intent = new Intent(this,AppsActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.fade_out);
                 break;
+//            case R.id.settings:
+//                UIUtils.showToast(this, "Settings");
+//                break;
         }
         return super.onOptionsItemSelected(item);
     }

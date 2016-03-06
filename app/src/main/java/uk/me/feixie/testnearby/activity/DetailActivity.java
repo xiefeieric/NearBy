@@ -54,32 +54,31 @@ public class DetailActivity extends AppCompatActivity {
 
         ActionBar supportActionBar = getSupportActionBar();
         supportActionBar.setDisplayHomeAsUpEnabled(true);
-        if (mRestaurant!=null) {
+        if (mRestaurant != null) {
             supportActionBar.setTitle(mRestaurant.name);
             supportActionBar.setSubtitle(mRestaurant.address);
-        } else if (mResJapanKorean!=null) {
+        } else if (mResJapanKorean != null) {
             supportActionBar.setTitle(mResJapanKorean.name);
             supportActionBar.setSubtitle(mResJapanKorean.address);
-        }else if (mResVenTai!=null) {
+        } else if (mResVenTai != null) {
             supportActionBar.setTitle(mResVenTai.name);
             supportActionBar.setSubtitle(mResVenTai.address);
-        }else if (mResWestern!=null) {
+        } else if (mResWestern != null) {
             supportActionBar.setTitle(mResWestern.name);
             supportActionBar.setSubtitle(mResWestern.address);
-        }else if (mResIndiaTurkey!=null) {
+        } else if (mResIndiaTurkey != null) {
             supportActionBar.setTitle(mResIndiaTurkey.name);
             supportActionBar.setSubtitle(mResIndiaTurkey.address);
-        }else if (mAfternoonTea!=null) {
+        } else if (mAfternoonTea != null) {
             supportActionBar.setTitle(mAfternoonTea.name);
             supportActionBar.setSubtitle(mAfternoonTea.address);
-        } else if (mCoffee!=null) {
+        } else if (mCoffee != null) {
             supportActionBar.setTitle(mCoffee.name);
             supportActionBar.setSubtitle(mCoffee.address);
-        } else if (mDesert!=null) {
+        } else if (mDesert != null) {
             supportActionBar.setTitle(mDesert.name);
             supportActionBar.setSubtitle(mDesert.address);
-        }
-        else {
+        } else {
             supportActionBar.setTitle("");
         }
     }
@@ -90,7 +89,7 @@ public class DetailActivity extends AppCompatActivity {
         wvDetail.getSettings().setJavaScriptEnabled(true);
 
 
-        wvDetail.setWebViewClient(new WebViewClient(){
+        wvDetail.setWebViewClient(new WebViewClient() {
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
@@ -104,21 +103,21 @@ public class DetailActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.INVISIBLE);
             }
         });
-        if (mRestaurant!=null) {
+        if (mRestaurant != null) {
             wvDetail.loadUrl(mRestaurant.url);
-        } else if (mResJapanKorean!=null) {
+        } else if (mResJapanKorean != null) {
             wvDetail.loadUrl(mResJapanKorean.url);
-        } else if (mResVenTai!=null) {
+        } else if (mResVenTai != null) {
             wvDetail.loadUrl(mResVenTai.url);
-        } else if (mResWestern!=null) {
+        } else if (mResWestern != null) {
             wvDetail.loadUrl(mResWestern.url);
-        } else if (mResIndiaTurkey!=null) {
+        } else if (mResIndiaTurkey != null) {
             wvDetail.loadUrl(mResIndiaTurkey.url);
-        } else if (mAfternoonTea!=null) {
+        } else if (mAfternoonTea != null) {
             wvDetail.loadUrl(mAfternoonTea.url);
-        } else if (mCoffee!=null) {
+        } else if (mCoffee != null) {
             wvDetail.loadUrl(mCoffee.url);
-        } else if (mDesert!=null) {
+        } else if (mDesert != null) {
             wvDetail.loadUrl(mDesert.url);
         }
 
@@ -126,7 +125,7 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_detail,menu);
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -145,7 +144,7 @@ public class DetailActivity extends AppCompatActivity {
                     zoom = which;
                 }
             });
-            builder.setNegativeButton("Cancel",null);
+            builder.setNegativeButton("Cancel", null);
             builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {

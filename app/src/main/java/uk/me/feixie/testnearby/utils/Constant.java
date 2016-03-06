@@ -8,5 +8,5 @@ public class Constant {
     public static final String SERVER = "http://www.feixie.me.uk";
     public static final String SERVER_JSON = "http://www.feixie.me.uk/nearbyJson.json";
     public static final int MAP_ZOOM = 15;
-
+    public static final String APPS_URL = "http://www.feixie.me.uk/apps.json";
 }

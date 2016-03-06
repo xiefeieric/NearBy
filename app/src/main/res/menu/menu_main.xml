@@ -4,8 +4,15 @@
       tools:context=".activity.MainActivity">
 
     <item
-        android:id="@+id/settings"
-        android:orderInCategory="100"
-        android:title="Settings"
-        app:showAsAction="never"/>
+        android:id="@+id/action_apps"
+        android:icon="@drawable/ic_get_app_white_24dp"
+        android:title="@string/my_apps"
+        app:showAsAction="ifRoom">
+    </item>
+
+    <!--<item-->
+        <!--android:id="@+id/settings"-->
+        <!--android:orderInCategory="100"-->
+        <!--android:title="Settings"-->
+        <!--app:showAsAction="never"/>-->
 </menu>
