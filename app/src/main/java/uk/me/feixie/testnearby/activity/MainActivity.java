@@ -1,10 +1,12 @@
 package uk.me.feixie.testnearby.activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.ArrayMap;
@@ -13,6 +15,8 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -62,6 +66,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int dataTypeId;
     private ArrayMap markerMap = new ArrayMap();
     private int resMarkerId;
+    private boolean[] threadRunArray;
+    private boolean isChineseThreadRun = true;
+    private boolean isJapanKoreanThreadRun = false;
+    private boolean isVanTaiThreadRun = false;
+    private boolean isWesternThreadRun = false;
+    private boolean isIndianTurkeyThreadRun = false;
+    private boolean isAfternoonTeaThreadRun = false;
+    private boolean isCoffeeThreadRun = false;
+    private boolean isDesertThreadRun = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,11 +86,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         x.Ext.init(getApplication());
         x.Ext.setDebug(true);
 
+        //init thread array
+        threadRunArray = new boolean[] {isChineseThreadRun,isJapanKoreanThreadRun,isVanTaiThreadRun,
+                isWesternThreadRun,isIndianTurkeyThreadRun,isAfternoonTeaThreadRun,isCoffeeThreadRun,isDesertThreadRun};
+
         //init toolbar
         initToolBar();
 
         //init views
         initViews();
+
+
 
         //init listeners
         initListeners();
@@ -121,8 +140,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //link toggle btton with drawer layout
         toggle.syncState();
         //load data from server
-        loadDataFromServer();
+//        loadDataFromServer();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String server_data = sharedPreferences.getString("server_data", "");
 
+
+        if (!TextUtils.isEmpty(server_data)) {
+            showDataOnMap(server_data);
+        } else {
+            loadDataFromServer();
+        }
     }
 
     private void loadDataFromServer() {
@@ -148,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onError(Throwable ex, boolean isOnCallback) {
                 hasError = true;
-                Toast.makeText(x.app(), ex.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(x.app(), "Can not connect to server!", Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -158,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onFinished() {
-                if (!hasError && result!=null) {
+                if (!hasError && result != null) {
                     showDataOnMap(result);
                 }
             }
@@ -186,33 +213,51 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                teaMarkerMap.clear();
                 if (position == 0) {
                     dataTypeId = 0;
+                    checkThreadStatus(0);
                     showRestaurantOnMap();
                 } else if (position == 1) {
                     dataTypeId = 1;
+                    checkThreadStatus(1);
                     showJapanKoreanRestaurantOnMap();
                 } else if (position == 2) {
                     dataTypeId = 2;
+                    checkThreadStatus(2);
                     showVenTaiRestaurantOnMap();
                 } else if (position == 3) {
                     dataTypeId = 3;
+                    checkThreadStatus(3);
                     showWesternRestaurantOnMap();
                 } else if (position == 4) {
                     dataTypeId = 4;
+                    checkThreadStatus(4);
                     showIndianTurkeyRestaurantOnMap();
                 } else if (position == 5) {
                     dataTypeId = 5;
+                    checkThreadStatus(5);
                     showAfternoonTeaOnMap();
                 } else if (position == 6) {
                     dataTypeId = 6;
+                    checkThreadStatus(6);
                     showCoffeeOnMap();
                 } else if (position == 7) {
                     dataTypeId = 7;
+                    checkThreadStatus(7);
                     showDesertOnMap();
                 }
 
                 dlMain.closeDrawers();
             }
         });
+    }
+
+    private void checkThreadStatus(int position) {
+        for (int i = 0; i < threadRunArray.length; i++) {
+            if (i==position) {
+               threadRunArray[i] = true;
+            } else {
+               threadRunArray[i] = false;
+            }
+        }
     }
 
 
@@ -236,30 +281,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
 
                 for (int i = 0; i < mServerData.data.get(0).restruant.size(); i++) {
-                    ServerData.DataItem.Restaurant restaurant = mServerData.data.get(0).restruant.get(i);
-                    String postcode = restaurant.postcode;
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-                    try {
-                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
-                        if (addresses.size() > 0) {
-                            double latitude = addresses.get(0).getLatitude();
-                            double longitude = addresses.get(0).getLongitude();
-                            LatLng dataAddress = new LatLng(latitude, longitude);
-                            final MarkerOptions options = new MarkerOptions();
-                            options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                            resMarkerId = i;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    if (threadRunArray[0]) {
+                        ServerData.DataItem.Restaurant restaurant = mServerData.data.get(0).restruant.get(i);
+                        String postcode = restaurant.postcode;
+                        Geocoder geocoder = new Geocoder(MainActivity.this);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                            if (addresses.size() > 0) {
+                                double latitude = addresses.get(0).getLatitude();
+                                double longitude = addresses.get(0).getLongitude();
+                                LatLng dataAddress = new LatLng(latitude, longitude);
+                                final MarkerOptions options = new MarkerOptions();
+                                options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                                    Marker marker = mMap.addMarker(options);
-                                    markerMap.put(marker, resMarkerId);
-                                }
-                            });
+                                resMarkerId = i;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Marker marker = mMap.addMarker(options);
+                                        markerMap.put(marker, resMarkerId);
+                                    }
+                                });
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } else {
+                        return;
                     }
                 }
             }
@@ -272,30 +322,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
 
                 for (int i = 0; i < mServerData.data.get(1).resJapanKorean.size(); i++) {
-                    ServerData.DataItem.ResJapanKorean restaurant = mServerData.data.get(1).resJapanKorean.get(i);
-                    String postcode = restaurant.postcode;
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-                    try {
-                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
-                        if (addresses.size() > 0) {
-                            double latitude = addresses.get(0).getLatitude();
-                            double longitude = addresses.get(0).getLongitude();
-                            LatLng dataAddress = new LatLng(latitude, longitude);
-                            final MarkerOptions options = new MarkerOptions();
-                            options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                            resMarkerId = i;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    if (threadRunArray[1]) {
+                        ServerData.DataItem.ResJapanKorean restaurant = mServerData.data.get(1).resJapanKorean.get(i);
+                        String postcode = restaurant.postcode;
+                        Geocoder geocoder = new Geocoder(MainActivity.this);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                            if (addresses.size() > 0) {
+                                double latitude = addresses.get(0).getLatitude();
+                                double longitude = addresses.get(0).getLongitude();
+                                LatLng dataAddress = new LatLng(latitude, longitude);
+                                final MarkerOptions options = new MarkerOptions();
+                                options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                                    Marker marker = mMap.addMarker(options);
-                                    markerMap.put(marker, resMarkerId);
-                                }
-                            });
+                                resMarkerId = i;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Marker marker = mMap.addMarker(options);
+                                        markerMap.put(marker, resMarkerId);
+                                    }
+                                });
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } else {
+                        return;
                     }
                 }
             }
@@ -309,30 +364,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
 
                 for (int i = 0; i < mServerData.data.get(2).resVenTai.size(); i++) {
-                    ServerData.DataItem.ResVenTai restaurant = mServerData.data.get(2).resVenTai.get(i);
-                    String postcode = restaurant.postcode;
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-                    try {
-                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
-                        if (addresses.size() > 0) {
-                            double latitude = addresses.get(0).getLatitude();
-                            double longitude = addresses.get(0).getLongitude();
-                            LatLng dataAddress = new LatLng(latitude, longitude);
-                            final MarkerOptions options = new MarkerOptions();
-                            options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                            resMarkerId = i;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    if (threadRunArray[2]) {
+                        ServerData.DataItem.ResVenTai restaurant = mServerData.data.get(2).resVenTai.get(i);
+                        String postcode = restaurant.postcode;
+                        Geocoder geocoder = new Geocoder(MainActivity.this);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                            if (addresses.size() > 0) {
+                                double latitude = addresses.get(0).getLatitude();
+                                double longitude = addresses.get(0).getLongitude();
+                                LatLng dataAddress = new LatLng(latitude, longitude);
+                                final MarkerOptions options = new MarkerOptions();
+                                options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                                    Marker marker = mMap.addMarker(options);
-                                    markerMap.put(marker, resMarkerId);
-                                }
-                            });
+                                resMarkerId = i;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Marker marker = mMap.addMarker(options);
+                                        markerMap.put(marker, resMarkerId);
+                                    }
+                                });
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } else {
+                        return;
                     }
                 }
             }
@@ -346,30 +406,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
 
                 for (int i = 0; i < mServerData.data.get(3).resWestern.size(); i++) {
-                    ServerData.DataItem.ResWestern restaurant = mServerData.data.get(3).resWestern.get(i);
-                    String postcode = restaurant.postcode;
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-                    try {
-                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
-                        if (addresses.size() > 0) {
-                            double latitude = addresses.get(0).getLatitude();
-                            double longitude = addresses.get(0).getLongitude();
-                            LatLng dataAddress = new LatLng(latitude, longitude);
-                            final MarkerOptions options = new MarkerOptions();
-                            options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                            resMarkerId = i;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    if (threadRunArray[3]) {
+                        ServerData.DataItem.ResWestern restaurant = mServerData.data.get(3).resWestern.get(i);
+                        String postcode = restaurant.postcode;
+                        Geocoder geocoder = new Geocoder(MainActivity.this);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                            if (addresses.size() > 0) {
+                                double latitude = addresses.get(0).getLatitude();
+                                double longitude = addresses.get(0).getLongitude();
+                                LatLng dataAddress = new LatLng(latitude, longitude);
+                                final MarkerOptions options = new MarkerOptions();
+                                options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                                    Marker marker = mMap.addMarker(options);
-                                    markerMap.put(marker, resMarkerId);
-                                }
-                            });
+                                resMarkerId = i;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Marker marker = mMap.addMarker(options);
+                                        markerMap.put(marker, resMarkerId);
+                                    }
+                                });
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } else {
+                        return;
                     }
                 }
             }
@@ -382,30 +447,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
 
                 for (int i = 0; i < mServerData.data.get(4).resIndiaTurkey.size(); i++) {
-                    ServerData.DataItem.ResIndiaTurkey restaurant = mServerData.data.get(4).resIndiaTurkey.get(i);
-                    String postcode = restaurant.postcode;
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-                    try {
-                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
-                        if (addresses.size() > 0) {
-                            double latitude = addresses.get(0).getLatitude();
-                            double longitude = addresses.get(0).getLongitude();
-                            LatLng dataAddress = new LatLng(latitude, longitude);
-                            final MarkerOptions options = new MarkerOptions();
-                            options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                            resMarkerId = i;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    if (threadRunArray[4]) {
+                        ServerData.DataItem.ResIndiaTurkey restaurant = mServerData.data.get(4).resIndiaTurkey.get(i);
+                        String postcode = restaurant.postcode;
+                        Geocoder geocoder = new Geocoder(MainActivity.this);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                            if (addresses.size() > 0) {
+                                double latitude = addresses.get(0).getLatitude();
+                                double longitude = addresses.get(0).getLongitude();
+                                LatLng dataAddress = new LatLng(latitude, longitude);
+                                final MarkerOptions options = new MarkerOptions();
+                                options.position(dataAddress).title(restaurant.name).snippet(restaurant.address);
 
-                                    Marker marker = mMap.addMarker(options);
-                                    markerMap.put(marker, resMarkerId);
-                                }
-                            });
+                                resMarkerId = i;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Marker marker = mMap.addMarker(options);
+                                        markerMap.put(marker, resMarkerId);
+                                    }
+                                });
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } else {
+                        return;
                     }
                 }
             }
@@ -419,32 +489,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
 
                 for (int i = 0; i < mServerData.data.get(5).tea.size(); i++) {
-                    ServerData.DataItem.Tea afternoonTea = mServerData.data.get(5).tea.get(i);
-                    String postcode = afternoonTea.postcode;
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-                    try {
-                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
-                        if (addresses.size() > 0) {
-                            double latitude = addresses.get(0).getLatitude();
-                            double longitude = addresses.get(0).getLongitude();
-                            LatLng dataAddress = new LatLng(latitude, longitude);
-                            final MarkerOptions options = new MarkerOptions();
-                            options.position(dataAddress).title(afternoonTea.name).snippet(afternoonTea.address);
 
-                            resMarkerId = i;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    if (threadRunArray[5]) {
+                        ServerData.DataItem.Tea afternoonTea = mServerData.data.get(5).tea.get(i);
+                        String postcode = afternoonTea.postcode;
+                        Geocoder geocoder = new Geocoder(MainActivity.this);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                            if (addresses.size() > 0) {
+                                double latitude = addresses.get(0).getLatitude();
+                                double longitude = addresses.get(0).getLongitude();
+                                LatLng dataAddress = new LatLng(latitude, longitude);
+                                final MarkerOptions options = new MarkerOptions();
+                                options.position(dataAddress).title(afternoonTea.name).snippet(afternoonTea.address);
 
-                                    Marker marker = mMap.addMarker(options);
-                                    markerMap.put(marker, resMarkerId);
-                                }
-                            });
-                        }
+                                resMarkerId = i;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Marker marker = mMap.addMarker(options);
+                                        markerMap.put(marker, resMarkerId);
+                                    }
+                                });
+                            }
 
 //                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(dataAddress,15));
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        return;
                     }
                 }
             }
@@ -458,32 +533,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
 
                 for (int i = 0; i < mServerData.data.get(6).coffee.size(); i++) {
-                    ServerData.DataItem.Coffee coffee = mServerData.data.get(6).coffee.get(i);
-                    String postcode = coffee.postcode;
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-                    try {
-                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
-                        if (addresses.size() > 0) {
-                            double latitude = addresses.get(0).getLatitude();
-                            double longitude = addresses.get(0).getLongitude();
-                            LatLng dataAddress = new LatLng(latitude, longitude);
-                            final MarkerOptions options = new MarkerOptions();
-                            options.position(dataAddress).title(coffee.name).snippet(coffee.address);
 
-                            resMarkerId = i;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    if (threadRunArray[6]) {
+                        ServerData.DataItem.Coffee coffee = mServerData.data.get(6).coffee.get(i);
+                        String postcode = coffee.postcode;
+                        Geocoder geocoder = new Geocoder(MainActivity.this);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                            if (addresses.size() > 0) {
+                                double latitude = addresses.get(0).getLatitude();
+                                double longitude = addresses.get(0).getLongitude();
+                                LatLng dataAddress = new LatLng(latitude, longitude);
+                                final MarkerOptions options = new MarkerOptions();
+                                options.position(dataAddress).title(coffee.name).snippet(coffee.address);
 
-                                    Marker marker = mMap.addMarker(options);
-                                    markerMap.put(marker, resMarkerId);
-                                }
-                            });
-                        }
+                                resMarkerId = i;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Marker marker = mMap.addMarker(options);
+                                        markerMap.put(marker, resMarkerId);
+                                    }
+                                });
+                            }
 
 //                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(dataAddress,15));
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        return;
                     }
                 }
             }
@@ -496,32 +576,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void run() {
 
                 for (int i = 0; i < mServerData.data.get(7).desert.size(); i++) {
-                    ServerData.DataItem.Desert desert = mServerData.data.get(7).desert.get(i);
-                    String postcode = desert.postcode;
-                    Geocoder geocoder = new Geocoder(MainActivity.this);
-                    try {
-                        List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
-                        if (addresses.size() > 0) {
-                            double latitude = addresses.get(0).getLatitude();
-                            double longitude = addresses.get(0).getLongitude();
-                            LatLng dataAddress = new LatLng(latitude, longitude);
-                            final MarkerOptions options = new MarkerOptions();
-                            options.position(dataAddress).title(desert.name).snippet(desert.address);
 
-                            resMarkerId = i;
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
+                    if (threadRunArray[7]) {
+                        ServerData.DataItem.Desert desert = mServerData.data.get(7).desert.get(i);
+                        String postcode = desert.postcode;
+                        Geocoder geocoder = new Geocoder(MainActivity.this);
+                        try {
+                            List<Address> addresses = geocoder.getFromLocationName(postcode, 1);
+                            if (addresses.size() > 0) {
+                                double latitude = addresses.get(0).getLatitude();
+                                double longitude = addresses.get(0).getLongitude();
+                                LatLng dataAddress = new LatLng(latitude, longitude);
+                                final MarkerOptions options = new MarkerOptions();
+                                options.position(dataAddress).title(desert.name).snippet(desert.address);
 
-                                    Marker marker = mMap.addMarker(options);
-                                    markerMap.put(marker, resMarkerId);
-                                }
-                            });
-                        }
+                                resMarkerId = i;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        Marker marker = mMap.addMarker(options);
+                                        markerMap.put(marker, resMarkerId);
+                                    }
+                                });
+                            }
 
 //                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(dataAddress,15));
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        return;
                     }
                 }
             }
@@ -641,7 +726,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         int itemId = item.getItemId();
         switch (itemId) {
             case R.id.action_apps:
-                Intent intent = new Intent(this,AppsActivity.class);
+                Intent intent = new Intent(this, AppsActivity.class);
                 startActivity(intent);
                 overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.fade_out);
                 break;
